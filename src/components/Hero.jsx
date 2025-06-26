@@ -1,8 +1,13 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/all';
+import { useRef } from 'react';
+import { useMediaQuery } from 'react-responsive';
 
 export function Hero() {
+  const videoRef = useRef();
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   useGSAP(() => {
     const heroSplit = new SplitText('h1', { type: 'chars, words' });
     const paragraphSplit = new SplitText('.subtitle', { type: 'lines' });
@@ -35,13 +40,32 @@ export function Hero() {
       })
       .to('#left-leaf', { y: -200 }, 0)
       .to('#right-leaf', { y: 200 }, 0);
+
+    const startValue = isMobile ? 'top 50%' : 'center 60%';
+    const endValue = isMobile ? '120% top ' : 'bottom top';
+
+    const videoTimeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: videoRef.current,
+        start: startValue,
+        end: endValue,
+        scrub: true,
+        pin: true,
+      },
+    });
+
+    videoRef.current.onloadedmetadata = () => {
+      videoTimeline.to(videoRef.current, {
+        currentTime: videoRef.current.duration,
+      });
+    };
   }, []);
 
   return (
     <>
       <section
         id="hero"
-        className="relative inset-0 z-10 size-full min-h-dvh w-full border border-transparent bg-[url('/images/noise.png')]"
+        className="relative inset-0 z-10 size-full min-h-dvh w-full border border-transparent bg-[url('/images/noise.png')] backdrop-blur-[0px]"
       >
         <h1 className="font-modern-negra mt-40 text-center text-8xl leading-none md:mt-32 md:text-[20vw]">
           MOJITO
@@ -85,6 +109,17 @@ export function Hero() {
           </div>
         </div>
       </section>
+
+      <div className="absolute inset-0">
+        <video
+          ref={videoRef}
+          src="/videos/output.mp4"
+          muted
+          playsInline
+          preload="auto"
+          className="absolute bottom-0 left-0 h-1/2 w-full scale-50 object-cover object-bottom md:h-[80%] md:object-contain"
+        ></video>
+      </div>
     </>
   );
 }
